@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html ng-app="aiApp">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Voice Assistant</title>
+
+  <!-- AngularJS CDN -->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1 {
+      text-shadow: 0 0 10px cyan;
+    }
+
+    .login-btn {
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .google { background: #db4437; color: white; }
+    .facebook { background: #4267B2; color: white; }
+
+    .chat-box {
+      margin: 20px auto;
+      width: 80%;
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid cyan;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .msg {
+      margin: 5px;
+      text-align: left;
+    }
+
+    .user { color: #00ffcc; }
+    .ai { color: #ffcc00; }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 15px;
+      margin: 10px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: cyan;
+      box-shadow: 0 0 15px cyan;
+    }
+
+    input {
+      padding: 10px;
+      width: 60%;
+      border-radius: 5px;
+      border: none;
+    }
+  </style>
+</head>
+
+<body ng-controller="MainController">
+
+<div class="container">
+
+  <h1>🤖 AI Voice Assistant</h1>
+
+  <!-- Login Section -->
+  <div ng-if="!isLoggedIn">
+    <button class="login-btn google" ng-click="login('Google')">Login with Google</button>
+    <button class="login-btn facebook" ng-click="login('Facebook')">Login with Facebook</button>
+  </div>
+
+  <!-- Chat Section -->
+  <div ng-if="isLoggedIn">
+
+    <p>Welcome, {{user}}</p>
+
+    <div class="chat-box">
+      <div ng-repeat="m in messages" class="msg">
+        <strong ng-class="m.type">{{m.type}}:</strong> {{m.text}}
+      </div>
+    </div>
+
+    <input type="text" ng-model="inputText" placeholder="Type message..." />
+    <button ng-click="send()">➤</button>
+
+    <div class="controls">
+      <button ng-click="startVoice()">🎤</button>
+      <button ng-click="stopVoice()">⛔</button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+var app = angular.module("aiApp", []);
+
+app.controller("MainController", function($scope) {
+
+  $scope.isLoggedIn = false;
+  $scope.user = "";
+  $scope.messages = [];
+
+  // Fake login (frontend demo only)
+  $scope.login = function(provider) {
+    $scope.isLoggedIn = true;
+    $scope.user = provider + " User";
+  };
+
+  // Send message
+  $scope.send = function() {
+    if (!$scope.inputText) return;
+
+    let userText = $scope.inputText;
+    $scope.messages.push({type: 'user', text: userText});
+
+    // Fake AI response
+    let aiText = "AI says: " + userText;
+
+    $scope.messages.push({type: 'ai', text: aiText});
+    speak(aiText);
+
+    $scope.inputText = "";
+  };
+
+  // Voice recognition
+  let recognition;
+
+  $scope.startVoice = function() {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Speech not supported");
+      return;
+    }
+
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = function(event) {
+      let text = event.results[0][0].transcript;
+      $scope.$apply(() => {
+        $scope.inputText = text;
+        $scope.send();
+      });
+    };
+
+    recognition.start();
+  };
+
+  $scope.stopVoice = function() {
+    if (recognition) recognition.stop();
+  };
+
+  // Text to Speech
+  function speak(text) {
+    let speech = new SpeechSynthesisUtterance(text);
+    speech.lang = "en-US";
+    window.speechSynthesis.speak(speech);
+  }
+
+});
+</script>
+
+</body>
+</html>
